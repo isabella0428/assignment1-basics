@@ -63,7 +63,7 @@ class Tokenizer:
 				for merge_token_1, merge_token_2 in raw_merges
 			]
 
-		cls(vocab, merges, special_tokens)
+		return cls(vocab, merges, special_tokens)
 
 	"""
 	Encode an input text into a sequence of token IDs.
@@ -75,14 +75,14 @@ class Tokenizer:
 		token_to_id = {v: k for k, v in self.vocab.items()}
 
 		# Create a pattern: (<|endoftext|>|<|other|>)
-		special_pat = ""
-		if self.special_tokens:
-			special_pat = "(" + "|".join(re.escape(t) for t in self.special_tokens) + ")"
+		parts = [text]
+		if len(self.special_tokens) > 0:
+			special_tokens_sorted = sorted(self.special_tokens, key=len, reverse=True)
+			special_pat = "(" + "|".join(re.escape(t) for t in special_tokens_sorted) + ")"
+			parts = re.split(special_pat, text)
 		
 		# Split the text
 		# "A<|endoftext|>B" -> ["A", "<|endoftext|>", "B"]
-		parts = re.split(special_pat, text)
-
 		final_ids = []
 		for part in parts:
 			if part in self.special_tokens:
