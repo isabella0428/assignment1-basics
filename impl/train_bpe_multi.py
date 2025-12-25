@@ -36,7 +36,6 @@ def train_bpe_multi(
 	# Use a Manager list to share tokens between processes
 	manager = Manager()
 	tokens = manager.list()
-	processes = []
 
 	with open(input_path, "rb") as file:
 		num_processes = 4
