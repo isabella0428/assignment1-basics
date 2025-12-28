@@ -8,9 +8,14 @@ import numpy.typing as npt
 import torch
 from jaxtyping import Bool, Float, Int
 from torch import Tensor
-from impl.train_bpe import train_bpe
-from impl.train_bpe_multi import train_bpe_multi
-from impl.Tokenizer import Tokenizer
+
+# BPE
+from impl.BPE.train_bpe import train_bpe
+from impl.BPE.train_bpe_multi import train_bpe_multi
+from impl.BPE.Tokenizer import Tokenizer
+
+# Transformer
+from impl.transformer.Linear import Linear
 
 
 def run_linear(
@@ -31,8 +36,13 @@ def run_linear(
     Returns:
         Float[Tensor, "... d_out"]: The transformed output of your linear module.
     """
+    linear = Linear(d_in, d_out, None, torch.float)
+    state_dict = {"W": weights}
 
-    raise NotImplementedError
+    # This replaces random torch.randn parameters with the test values
+    linear.load_state_dict(state_dict)
+
+    return linear.forward(in_features)
 
 
 def run_embedding(
