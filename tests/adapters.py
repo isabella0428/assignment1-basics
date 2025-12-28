@@ -16,6 +16,7 @@ from impl.BPE.Tokenizer import Tokenizer
 
 # Transformer
 from impl.transformer.Linear import Linear
+from impl.transformer.Embedding import Embedding
 
 
 def run_linear(
@@ -64,7 +65,12 @@ def run_embedding(
         Float[Tensor, "... d_model"]: Batch of embeddings returned by your Embedding layer.
     """
 
-    raise NotImplementedError
+    embedding = Embedding(vocab_size, d_model)
+    state_dict = {"embedding_matrix": weights}
+    embedding.load_state_dict(state_dict)
+
+    return embedding.forward(token_ids)
+
 
 
 def run_swiglu(
