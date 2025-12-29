@@ -18,6 +18,7 @@ from impl.BPE.Tokenizer import Tokenizer
 from impl.transformer.Linear import Linear
 from impl.transformer.Embedding import Embedding
 from impl.transformer.RMSNorm import RMSNorm
+from impl.transformer.SwiGLU import SwiGLU
 
 
 def run_linear(
@@ -101,7 +102,11 @@ def run_swiglu(
     # swiglu.w1.weight.data = w1_weight
     # swiglu.w2.weight.data = w2_weight
     # swiglu.w3.weight.data = w3_weight
-    raise NotImplementedError
+    
+    swiGLU = SwiGLU(d_model, d_ff)
+    state_dict = {"W1": w1_weight, "W2": w2_weight, "W3": w3_weight}
+    swiGLU.load_state_dict(state_dict)
+    return swiGLU.forward(in_features)
 
 
 def run_scaled_dot_product_attention(
