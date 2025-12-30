@@ -1,16 +1,18 @@
 import torch
 from einops import einsum
-from Softmax import Softmax
+from impl.transformer.Softmax import Softmax
+import numpy as np
 
 class ScaledDotProductAttention(torch.nn.Module):
 	def apply(
+			self,
 			q: torch.Tensor,		# (batch_size, ..., seq_len, d_k)
 			k: torch.Tensor,		# (batch_size, ..., seq_len, d_k)
 			v: torch.Tensor,		# (batch_size, ..., seq_len, d_v)
 			mask: torch.Tensor		# (seq_len, seq_len)
 	) -> torch.Tensor:	# (batch_size, ..., d_v)
-		d_k = q.shape(-1)
-		sqrt = torch.sqrt(d_k)
+		d_k = q.size(-1)
+		sqrt = np.sqrt(d_k)
 		pre_softmax = einsum(
 			q,
 			k,
@@ -21,6 +23,6 @@ class ScaledDotProductAttention(torch.nn.Module):
             # We use a very large negative number for numerical stability
 			pre_softmax = pre_softmax.masked_fill(mask == False, float("-inf"))
 
-		after_softmax = Softmax().apply(pre_softmax, dim=-1)
+		after_softmax = Softmax().apply(pre_softmax, -1)
 		attention = after_softmax @ v
 		return attention

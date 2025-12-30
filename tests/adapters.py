@@ -21,6 +21,7 @@ from impl.transformer.RMSNorm import RMSNorm
 from impl.transformer.SwiGLU import SwiGLU
 from impl.transformer.RotaryPositionalEmbedding import RotaryPositionalEmbedding
 from impl.transformer.Softmax import Softmax
+from impl.transformer.ScaledDotProductAttention import ScaledDotProductAttention
 
 def run_linear(
     d_in: int,
@@ -128,7 +129,8 @@ def run_scaled_dot_product_attention(
     Returns:
         Float[Tensor, " ... queries d_v"]: Output of SDPA
     """
-    raise NotImplementedError
+    attention = ScaledDotProductAttention()
+    return attention.apply(Q, K, V, mask)
 
 
 def run_multihead_self_attention(
