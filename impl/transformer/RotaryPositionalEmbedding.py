@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+from einops import einsum
 
 class RotaryPositionalEmbedding(torch.nn.Module):
 	"""
@@ -40,15 +41,12 @@ class RotaryPositionalEmbedding(torch.nn.Module):
 	along the sequence dimension.
 	"""
 	def forward(self, x: torch.Tensor, token_positions: torch.Tensor) -> torch.Tensor:
-		*batch_dims, seq_len, d_k = x.shape
-		x_flat = x.reshape(-1, seq_len, d_k)
-		token_pos_flat = token_positions.reshape(-1, seq_len)  # (batch_flat, seq_len)
-
         # Select rotation matrices for each token position
-		rot = self.rotation_matrix[token_pos_flat]  # (batch_flat, seq_len, d_k, d_k)
+		# rotation_matrix (max_seq_len, d_k, d_k)
+		# token_positions (..., seq_len)
+		rot = self.rotation_matrix[token_positions]  # (..., seq_len, d_k, d_k)
 
-        # Batch matrix multiplication: R @ x
-		x_flat_unsq = x_flat.unsqueeze(-1)  # (batch_flat, seq_len, d_k, 1)
-		out_flat = torch.matmul(rot, x_flat_unsq)  # (batch_flat, seq_len, d_k, 1)
-		out_flat = out_flat.squeeze(-1)           # (batch_flat, seq_len, d_k)
-		return out_flat.reshape(*batch_dims, seq_len, d_k)
+		# x: (batch, sequence_len, d_k)
+		# rot: (batch_flat, seq_len, d_k, d_k)
+		out = einsum(x, rot, '... seq_len d_k1, ... seq_len d_k2 d_k1 -> ... seq_len d_k2')
+		return out
