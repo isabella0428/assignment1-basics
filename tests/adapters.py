@@ -23,6 +23,7 @@ from impl.transformer.RotaryPositionalEmbedding import RotaryPositionalEmbedding
 from impl.transformer.Softmax import Softmax
 from impl.transformer.ScaledDotProductAttention import ScaledDotProductAttention
 from impl.transformer.MultiHeadSelfAttention import MultiHeadSelfAttention
+from impl.transformer.MultiHeadSelfAttentionWithRope import MultiHeadSelfAttentionWithRope
 
 def run_linear(
     d_in: int,
@@ -214,7 +215,19 @@ def run_multihead_self_attention_with_rope(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+
+    multiHeadSelfAttentionWithRope = MultiHeadSelfAttentionWithRope()
+    return multiHeadSelfAttentionWithRope.apply(
+        num_heads,
+        theta,
+        max_seq_len,
+        q_proj_weight,
+        k_proj_weight,
+        v_proj_weight,
+        o_proj_weight,
+        in_features,
+        token_positions
+    )
 
 
 def run_rope(
