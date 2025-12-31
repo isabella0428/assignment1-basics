@@ -9,7 +9,7 @@ class ScaledDotProductAttention(torch.nn.Module):
 			q: torch.Tensor,		# (batch_size, ..., seq_len, d_k)
 			k: torch.Tensor,		# (batch_size, ..., seq_len, d_k)
 			v: torch.Tensor,		# (batch_size, ..., seq_len, d_v)
-			mask: torch.Tensor		# (seq_len, seq_len)
+			mask: torch.Tensor		# (batch_size, num_heads, seq_len, seq_len)
 	) -> torch.Tensor:	# (batch_size, ..., d_v)
 		d_k = q.size(-1)
 		sqrt = np.sqrt(d_k)
