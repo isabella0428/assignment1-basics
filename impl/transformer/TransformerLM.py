@@ -65,6 +65,10 @@ class TransformerLM(torch.nn.Module):
 			Shape is (vocab_size, d_model).
 	in_indices (Int[Tensor, "batch_size sequence_length"]) Tensor with input indices to run the language model on. Shape is (batch_size, sequence_length), where
 		`sequence_length` is at most `context_length`.
+
+	Returns:
+        Float[Tensor, "batch_size sequence_length vocab_size"]: Tensor with the predicted unnormalized
+        next-word distribution for each token.
 	"""
 	def apply(
 			self,
