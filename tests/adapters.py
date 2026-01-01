@@ -27,6 +27,9 @@ from impl.transformer.MultiHeadSelfAttentionWithRope import MultiHeadSelfAttenti
 from impl.transformer.TransformerBlock import TransformerBlock
 from impl.transformer.TransformerLM import TransformerLM
 
+# Train
+from impl.train.CrossEntrophy import CrossEntrophy
+
 def run_linear(
     d_in: int,
     d_out: int,
@@ -525,7 +528,7 @@ def run_cross_entropy(
     Returns:
         Float[Tensor, ""]: The average cross-entropy loss across examples.
     """
-    raise NotImplementedError
+    return CrossEntrophy.apply(inputs, targets)
 
 
 def run_gradient_clipping(parameters: Iterable[torch.nn.Parameter], max_l2_norm: float) -> None:
