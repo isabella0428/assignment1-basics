@@ -30,6 +30,7 @@ from impl.transformer.TransformerLM import TransformerLM
 # Train
 from impl.train.CrossEntrophy import CrossEntrophy
 from impl.train.AdamW import AdamW
+from impl.train.LearningRateScheduler import LearningRateScheduler
 
 def run_linear(
     d_in: int,
@@ -576,7 +577,7 @@ def run_get_lr_cosine_schedule(
     Returns:
         Learning rate at the given iteration under the specified schedule.
     """
-    raise NotImplementedError
+    return LearningRateScheduler.get_lr(it, max_learning_rate, min_learning_rate, warmup_iters, cosine_cycle_iters)
 
 
 def run_save_checkpoint(
