@@ -5,7 +5,7 @@ from impl.transformer.RMSNorm import RMSNorm
 from impl.transformer.SwiGLU import SwiGLU
 from impl.transformer.MultiHeadSelfAttentionWithRope import MultiHeadSelfAttentionWithRope
 
-class TransformerLayer(torch.nn.Module):
+class TransformerBlock(torch.nn.Module):
 	"""
 	Implement the pre-norm Transformer block as described in §3.5 and illustrated in Figure 2. Your
 	Transformer block should accept (at least) the following parameters.

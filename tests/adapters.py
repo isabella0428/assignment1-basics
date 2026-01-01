@@ -24,7 +24,8 @@ from impl.transformer.Softmax import Softmax
 from impl.transformer.ScaledDotProductAttention import ScaledDotProductAttention
 from impl.transformer.MultiHeadSelfAttention import MultiHeadSelfAttention
 from impl.transformer.MultiHeadSelfAttentionWithRope import MultiHeadSelfAttentionWithRope
-from impl.transformer.TransformerLayer import TransformerLayer
+from impl.transformer.TransformerBlock import TransformerBlock
+from impl.transformer.TransformerLM import TransformerLM
 
 def run_linear(
     d_in: int,
@@ -324,8 +325,8 @@ def run_transformer_block(
         Float[Tensor, "batch sequence_length d_model"] Tensor with the output of
         running the Transformer block on the input features while using RoPE.
     """
-    transformerLayer = TransformerLayer()
-    return transformerLayer.apply(
+    transformerBlock = TransformerBlock()
+    return transformerBlock.apply(
         d_model,
         num_heads,
         d_ff,
@@ -414,7 +415,19 @@ def run_transformer_lm(
         Float[Tensor, "batch_size sequence_length vocab_size"]: Tensor with the predicted unnormalized
         next-word distribution for each token.
     """
-    raise NotImplementedError
+    
+    transformer_lm = TransformerLM()
+    return transformer_lm.apply(
+        vocab_size,
+        context_length,
+        d_model,
+        num_layers,
+        num_heads,
+        d_ff,
+        rope_theta,
+        weights,
+        in_indices
+    )
 
 
 def run_rmsnorm(
