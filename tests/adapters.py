@@ -226,15 +226,14 @@ def run_multihead_self_attention_with_rope(
         implementation with the given QKV projection weights and input features.
     """
 
-    multiHeadSelfAttentionWithRope = MultiHeadSelfAttentionWithRope()
-    return multiHeadSelfAttentionWithRope.apply(
-        num_heads,
+    multiHeadSelfAttentionWithRope = MultiHeadSelfAttentionWithRope(num_heads,
         theta,
         max_seq_len,
         q_proj_weight,
         k_proj_weight,
         v_proj_weight,
-        o_proj_weight,
+        o_proj_weight,)
+    return multiHeadSelfAttentionWithRope.forward(
         in_features,
         token_positions
     )
@@ -333,14 +332,13 @@ def run_transformer_block(
         Float[Tensor, "batch sequence_length d_model"] Tensor with the output of
         running the Transformer block on the input features while using RoPE.
     """
-    transformerBlock = TransformerBlock()
-    return transformerBlock.apply(
-        d_model,
+    transformerBlock = TransformerBlock(d_model,
         num_heads,
         d_ff,
         max_seq_len,
         theta,
-        weights,
+        weights)
+    return transformerBlock.forward(
         in_features
     )
 
@@ -424,16 +422,15 @@ def run_transformer_lm(
         next-word distribution for each token.
     """
     
-    transformer_lm = TransformerLM()
-    return transformer_lm.apply(
-        vocab_size,
+    transformer_lm = TransformerLM(vocab_size,
         context_length,
         d_model,
         num_layers,
         num_heads,
         d_ff,
         rope_theta,
-        weights,
+        weights)
+    return transformer_lm.forward(
         in_indices
     )
 

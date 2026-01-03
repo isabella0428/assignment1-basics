@@ -70,8 +70,7 @@ class TransformerLM(torch.nn.Module):
         Float[Tensor, "batch_size sequence_length vocab_size"]: Tensor with the predicted unnormalized
         next-word distribution for each token.
 	"""
-	def apply(
-			self,
+	def __init__(self,
 		   	vocab_size: int,
 		   	context_length: int,
 			d_model: int,
@@ -79,17 +78,15 @@ class TransformerLM(torch.nn.Module):
 			num_heads: int,
 			d_ff: int,
 			rope_theta:float,
-			weights: Dict[str, torch.Tensor],
-			in_indices: torch.Tensor) -> torch.Tensor:
+			weights: Dict[str, torch.Tensor]):
+		super().__init__()
+
 		# Embedding
-		embedding = Embedding(vocab_size, d_model)
-		embedding.load_state_dict({"embedding_matrix": weights["token_embeddings.weight"]})
-		embedded_matrix = embedding.forward(
-			in_indices
-		)
+		self.embedding = Embedding(vocab_size, d_model)
+		self.embedding.load_state_dict({"embedding_matrix": weights["token_embeddings.weight"]})
 
 		# Transformer blocks
-		transformer_layer_output = embedded_matrix
+		self.transformer_blocks = []
 		for i in range(num_layers):
 			block_weights = {
 				"attn.q_proj.weight": weights[f"layers.{i}.attn.q_proj.weight"],
@@ -102,17 +99,36 @@ class TransformerLM(torch.nn.Module):
 				"ffn.w2.weight": weights[f"layers.{i}.ffn.w2.weight"],
 				"ffn.w3.weight": weights[f"layers.{i}.ffn.w3.weight"],
 			}
-			transformer_layer_output = TransformerBlock().apply(
-				d_model, num_heads, d_ff, context_length, rope_theta, block_weights, transformer_layer_output
+			transformer_block = TransformerBlock(
+				d_model, num_heads, d_ff, context_length, rope_theta, block_weights
+			)
+			self.transformer_blocks.append(transformer_block)
+
+		# RMS norm
+		self.final_rmsNorm = RMSNorm(d_model)
+		if "ln_final.weight" in weights:
+			self.final_rmsNorm.load_state_dict({"g": weights["ln_final.weight"]})
+
+		# final linear
+		self.linear = Linear(d_model, vocab_size)
+		if "lm_head.weight" in weights:
+			self.linear.load_state_dict({"W": weights["lm_head.weight"]})
+
+	def forward(self, x: torch.Tensor) -> torch.Tensor:
+		embedded_matrix = self.embedding.forward(
+			x
+		)
+
+		# Transformer blocks
+		transformer_layer_output = embedded_matrix
+		for transformer_block in self.transformer_blocks:
+			transformer_layer_output = transformer_block.forward(
+				transformer_layer_output
 			)
 
 		# RMS norm
-		final_rmsNorm = RMSNorm(d_model)
-		final_rmsNorm.load_state_dict({"g": weights["ln_final.weight"]})
-		final_rmsNorm_result = final_rmsNorm.forward(transformer_layer_output)
+		final_rmsNorm_result = self.final_rmsNorm.forward(transformer_layer_output)
 
 		# final linear
-		linear = Linear(d_model, vocab_size)
-		linear.load_state_dict({"W": weights["lm_head.weight"]})
-		final_linear_result = linear.forward(final_rmsNorm_result)
+		final_linear_result = self.linear.forward(final_rmsNorm_result)
 		return final_linear_result

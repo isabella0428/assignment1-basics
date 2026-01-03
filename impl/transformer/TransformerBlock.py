@@ -57,43 +57,54 @@ class TransformerBlock(torch.nn.Module):
 	in_features (Float[Tensor, "batch sequence_length d_model"]):
 		Tensor to run your implementation on.
 	"""
-	def apply(
-			self,
-		   	d_model: int,
+	def __init__(self, d_model: int,
 			num_heads: int,
 			d_ff: int,
 			max_seq_len: int,
 			theta: float,
-			weights: Dict[str, torch.Tensor],
-			in_features: torch.Tensor) -> torch.Tensor:
+			weights: Dict[str, torch.Tensor]):
+		super().__init__()
+
 		# Attention layer rmsNorm
-		rmsNorm1 = RMSNorm(d_model)
-		rmsNorm1.load_state_dict({"g": weights["ln1.weight"]})
-		attention_layer_rms_x = rmsNorm1.forward(in_features)
+		self.rmsNorm1 = RMSNorm(d_model)
+		self.rmsNorm1.load_state_dict({"g": weights["ln1.weight"]})
 		
-		# Multi head self attention
-		seq_len = in_features.shape[-2]
-		token_positions = torch.arange(seq_len, device=in_features.device)
-		attention_result = MultiHeadSelfAttentionWithRope().apply(
+		self.multiHeadAttention = MultiHeadSelfAttentionWithRope(
 			num_heads,
 			theta,
 			max_seq_len,
 			weights["attn.q_proj.weight"],
 			weights["attn.k_proj.weight"],
 			weights["attn.v_proj.weight"],
-			weights["attn.output_proj.weight"],
+			weights["attn.output_proj.weight"]
+		)
+
+		# FFN layer rmsNorm
+		self.rmsNorm2 = RMSNorm(d_model)
+		self.rmsNorm2.load_state_dict({"g": weights["ln2.weight"]})
+
+		# SwiGLU
+		self.swiGLU = SwiGLU(d_model, d_ff)
+		self.swiGLU.load_state_dict({"W1": weights["ffn.w1.weight"], "W2": weights["ffn.w2.weight"], "W3": weights["ffn.w3.weight"]})
+
+	def forward(
+			self,
+			in_features: torch.Tensor) -> torch.Tensor:
+		# Attention layer rmsNorm
+		attention_layer_rms_x = self.rmsNorm1.forward(in_features)
+		
+		# Multi head self attention
+		seq_len = in_features.shape[-2]
+		token_positions = torch.arange(seq_len, device=in_features.device)
+		attention_result = self.multiHeadAttention.forward(
 			attention_layer_rms_x,
 			token_positions
 		)
 		attention_layer_result = in_features + attention_result
 
 		# FFN layer rmsNorm
-		rmsNorm2 = RMSNorm(d_model)
-		rmsNorm2.load_state_dict({"g": weights["ln2.weight"]})
-		rmsNorm2_result = rmsNorm2.forward(attention_layer_result)
+		rmsNorm2_result = self.rmsNorm2.forward(attention_layer_result)
 
 		# SwiGLU
-		swiGLU = SwiGLU(d_model, d_ff)
-		swiGLU.load_state_dict({"W1": weights["ffn.w1.weight"], "W2": weights["ffn.w2.weight"], "W3": weights["ffn.w3.weight"]})
-		swiGLU_result = swiGLU.forward(rmsNorm2_result)
+		swiGLU_result = self.swiGLU.forward(rmsNorm2_result)
 		return attention_layer_result + swiGLU_result
